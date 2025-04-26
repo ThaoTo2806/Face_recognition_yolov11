@@ -10,50 +10,47 @@ model = YOLO('best_model.pt')
 
 # Mảng thông tin người để so sánh
 people_data = [
-    {"name": "Cao Tấn Công", "age": 22, "GT": "Nam", "class_name": "cong_caos"},
+    {"name": "Cao Tấn Công", "age": 22, "GT": "Nam", "class_name": "cong_cao"},
     {"name": "Lê Hữu Tài", "age": 22, "GT": "Nam", "class_name": "tai_le"}
 ]
 
 @app.route('/predict', methods=['POST'])
 def predict():
-    # Kiểm tra xem có tệp được gửi lên không
     if 'file' not in request.files:
         return jsonify({"error": "No file part"}), 400
     
     file = request.files['file']
     
-    # Nếu không có tệp được chọn
     if file.filename == '':
         return jsonify({"error": "No selected file"}), 400
 
-    # Đọc ảnh và thực hiện dự đoán
     img = cv2.imdecode(np.frombuffer(file.read(), np.uint8), cv2.IMREAD_COLOR)
     
-    # Thực hiện dự đoán
     results = model(img)
-
-    # Lấy kết quả nhận diện đầu tiên
     result = results[0]
-    #print(f"Result: {result}")
 
-    # Kiểm tra nếu có đối tượng phát hiện và có xác suất
-    if result.probs is not None and len(result.probs) > 0:
-        # Lấy tên lớp có xác suất cao nhất
-        class_name = result.names[result.probs.argmax().item()]
-        print(f"Detected class: {class_name}")  # In ra tên lớp nhận diện được
+    # Lấy tất cả tên lớp phát hiện
+    detected_classes = [result.names[int(cls)] for cls in result.boxes.cls]
+    print(f"Detected classes: {detected_classes}")
 
-        # Chuẩn hóa tên lớp (chẳng hạn loại bỏ dấu cách, chuyển thành chữ thường nếu cần)
-        class_name = class_name.strip().lower()  # Chuyển thành chữ thường và loại bỏ dấu cách nếu có
-        
-        # Tìm thông tin của người trong mảng, kiểm tra so sánh class_name
+    # Dùng set để loại trùng
+    unique_classes = set([cls.strip().lower() for cls in detected_classes])
+
+    # Tìm người tương ứng
+    people_detected = []
+    for class_name in unique_classes:
         person_info = next((person for person in people_data if person["class_name"].strip().lower() == class_name), None)
-        
         if person_info:
-            return jsonify({"message": "Prediction complete", "class_name": class_name, "info": person_info})
-        else:
-            return jsonify({"message": "Person not found in data."})
+            people_detected.append({
+                "name": person_info["name"],
+                "age": person_info["age"],
+                "class_name": class_name
+            })
+
+    if people_detected:
+        return jsonify({"message": "Prediction complete", "people_detected": people_detected})
     else:
-        return jsonify({"message": "No objects detected."})
+        return jsonify({"message": "No matching person found."})
 
 if __name__ == '__main__':
     app.run(debug=True)

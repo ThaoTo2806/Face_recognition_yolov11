@@ -6,16 +6,16 @@ import matplotlib.pyplot as plt
 model = YOLO('best_model.pt')  # Đảm bảo đường dẫn tới mô hình đã được tải xuống
 
 # Đọc hình ảnh mới để kiểm tra
-image_path = 'img15.jpg'  # Đảm bảo rằng đường dẫn tới hình ảnh là chính xác
+image_path = 'img21.jpg'  # Đảm bảo rằng đường dẫn tới hình ảnh là chính xác
 
 # Đọc ảnh bằng OpenCV
 img = cv2.imread(image_path)
 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)  # Chuyển đổi từ BGR sang RGB (OpenCV mặc định là BGR)
 
-# Thực hiện dự đoán
-results = model(img)
+# Thực hiện dự đoán và chỉ định ngưỡng confidence
+results = model.predict(img, conf=0.6)  # Sử dụng 'conf' thay cho 'conf_thres'
 
-# Nếu results là một list, hãy lấy đối tượng đầu tiên trong danh sách
+# Nếu results là một list, lấy đối tượng đầu tiên trong danh sách
 result = results[0]
 
 # Hiển thị kết quả

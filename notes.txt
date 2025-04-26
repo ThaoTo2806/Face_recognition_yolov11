@@ -7,7 +7,8 @@ source venv/bin/activate) => mac
 2: Cài ultralytics
 pip install ultralytics
 
-pip install flask opencv-python ultralytics face_recognition
+pip install opencv-python
+pip install matplotlib
 
 3:  Cài thư viện flask (để xây dựng API), opencv (để xử lý ảnh), và face_recognition để nhận diện khuôn mặt.
 pip install flask opencv-python ultralytics face_recognition (cài trước brew install cmake)
